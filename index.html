@@ -529,13 +529,10 @@
                 $("#startYearButton").click(function() {
                     startYear = Number($("#startYearInput").val()) - 1
                     startDate = new Date(startYear, 11, 25)
-                    endDate = d3.timeMonth.offset(startDate, time_interval_total + 3)  
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)  
 
-
-                    let dates = d3.timeMonth.range(startDate, endDate, time_interval)
-                    console.log(dates)
                     for(let i = 0; i < yData[0].length; i++){
-                        yData[0][i].x = dates[i+1]
+                        yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0,i+1).reduce(getSum, 0))  
                     }   
                     renderChart()
 
