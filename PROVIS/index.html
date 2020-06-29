@@ -112,7 +112,7 @@
             <div class="col-lg-2"></div>
             <div class="col-lg-5">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="time_interval_input" placeholder = "Time Interval For New Data"/>
+                    <input type="text" class="form-control" id="time_interval_input" placeholder = "Time Interval, default 3(months)"/>
                     <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
                     <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
                 </div>
@@ -491,7 +491,7 @@
                             .call(d3.drag()
                                 // .on("start")
                                 .on("drag", d => {
-                                    d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
+                                    // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
                                     d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy)); 
                                 })
                                 // .on("end")
