@@ -165,15 +165,19 @@
 
             function appendDataPoint(data){
                 let time_interval_t = $("#time_interval_input").val();
-                if(time_interval_t != ""){
-                    time_interval = time_interval_t
+                if(Number.isNaN(Number(time_interval_t)) || Number(time_interval_t) < 1){
+                    alert('Time Interval Value Should Be Positive Interger')
+                }else{
+                    if(time_interval_t != ""){
+                        time_interval = time_interval_t
+                    }
+                    time_interval_list.push(time_interval)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
+                    data.push({
+                        y: 50,
+                        x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
+                    })
                 }
-                time_interval_list.push(time_interval)
-                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
-                data.push({
-                    y: 50,
-                    x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
-                })
             }
 
             function deleteDataPoint(data){
@@ -527,25 +531,36 @@
                 /*---- Interaction -----*/
             $(document).ready(function() {
                 $("#startYearButton").click(function() {
-                    startYear = Number($("#startYearInput").val()) - 1
-                    startDate = new Date(startYear, 11, 25)
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)  
+                    let input_y = Number($("#startYearInput").val())
+                    if(!Number.isNaN(input_y)){
+                        startYear = input_y - 1
+                        startDate = new Date(startYear, 11, 25)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)  
 
-                    for(let i = 0; i < yData[0].length; i++){
-                        yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0,i+1).reduce(getSum, 0))  
-                    }   
-                    renderChart()
+                        for(let i = 0; i < yData[0].length; i++){
+                            yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0,i+1).reduce(getSum, 0))  
+                        }   
+                        renderChart()
+                    }else{
+                        alert("Input Wrong")
+                    }
 
                 })
                 $("#LowerBoundButton").click(function() {
-                    lower_bound = $("#LowerBound").val();
-                    if(lower_bound){
+                    let lower_bound_t = Number($("#LowerBound").val());
+                    if(Number.isNaN(lower_bound_t) || lower_bound_t > higher_bound || lower_bound_t < 0){
+                        alert("Input Wrong")
+                    }else{
+                        lower_bound = lower_bound_t
                         renderChart()
                     }
                 })
                 $("#UpperBoundButton").click(function() {
-                    higher_bound = $("#UpperBound").val();
-                    if(higher_bound){
+                    let higher_bound_t = Number($("#UpperBound").val());
+                    if(Number.isNaN(higher_bound_t) || higher_bound_t < lower_bound || higher_bound_t > 100){
+                        alert("Input Wrong")
+                    }else{
+                        higher_bound = higher_bound_t
                         renderChart()
                     }
                 })
