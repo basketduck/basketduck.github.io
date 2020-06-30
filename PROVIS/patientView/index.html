@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <style>
+        .row {
+            margin-top: 1rem !important;
+        }
+
+        .axisY line {
+            stroke: black;
+            stroke-width: 1;
+        }
+        
+        .axisY path {
+            stroke: black;
+            stroke-width: 1;
+        }
+        
+        .axisY text {
+            fill: black;
+            font-size: 100%;
+        }
+        
+        .axisX line {
+            stroke: grey;
+            stroke-width: 1.5;
+        }
+        
+        .axisX path {
+            stroke: grey;
+            stroke-width: 1;
+        }
+        
+        .axisX text {
+            fill: black;
+            font-size: 120%;
+            transform: rotate(30);
+        }
+        
+        .dot {
+            fill: #ffab00;
+            stroke: #fff;
+        }
+        
+        .smallRect {
+            stroke: #2ca02c;
+            stroke-width: 3;
+            fill-opacity: 0;
+            /* fill: #fff; */
+        }
+        
+        .smallTriangle {
+            stroke: #bcbd22;
+            stroke-width: 3;
+            fill-opacity: 0;
+            /* fill: #fff; */
+        }
+    </style>
+
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>PROVIS</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row" id="firstRow">
+            <div class="col-md-12" class="col-lg-12" id="Chart"></div>
+        </div>
+        <div class="row" id="inputRow">
+            <div class="col-md-12" class="col-lg-12">
+                <form class="bs-example bs-example-form" role="form">
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="startYearInput" placeholder = "Set Start Year"/>
+                                <span class="input-group-btn"><button class="btn btn-primary" type="button" id="startYearButton">StartYear</button></span>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="LowerBound" placeholder = "Set Lower Bound"/>
+                                <span class="input-group-btn"><button class="btn btn-primary" type="button" id="LowerBoundButton">LwrBnd</button></span>
+                                <input type="text" class="form-control" id="UpperBound" placeholder = "Set Higher Bound"/>
+                                <span class="input-group-btn"><button class="btn btn-primary" type="button" id="UpperBoundButton">UprBnd</button></span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <!-- <button class="btn btn-primary" type="button" id="whichIsBetterBtn">Switch Higher / Lower</button> -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class = "row">
+            <div class="col-lg-5">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="titleInput" placeholder = "Input Title Here"/>
+                    <button class="btn btn-primary" type="button" id="changeTitleButton">Set Title</button>
+                </div>
+            </div>
+            <div class="col-lg-2"></div>
+            <div class="col-lg-5">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="time_interval_input" placeholder = "Time Interval, default 3(months)"/>
+                    <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
+                    <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            var lowerIsBetter = false
+            paraOfYData = {
+                min: 22,
+                max: 64
+            }
+
+            PainData = [
+                [50, null, 55, null, 60, null, null, 55, null, 50, null],
+                [30, null, 30, null, 35, null, 50, null, 50, null, 55],
+                [40, null, 40, null, 40, null, 40, null, 50, null, 50],
+                [60, null, 60, null, 65, null, null, 60, null, 50, null],
+                [null, 20, null, 20, null, 30, null, 40, null, 35, null],
+                [60, null, 65, null, 70, null, 75, null, 65, null, 55],
+                [50, null, 40, null, 42, null, 45, null, 50, null, 45]
+            ]
+            surgeryData = [15, 15, null, 18, null, 21, null]
+
+            PysicalFunctionData = [
+                [50, null, 45, null, 40, null, null, 45, null, 50, null],
+                [65, null, 60, null, 50, null, 60, null, 60, null, 44],
+                [70, null, 65, null, 55, null, 54, null, 50, null, 45],
+                [42, null, 40, null, 33, null, null, 50, null, 56, null],
+                [null, 50, null, 50, null, 55, null, 50, null, 65, null],
+                [40, null, 38, null, 38, null, 35, null, 40, null, 55],
+                [50, null, 50, null, 55, null, 49, null, 59, null, 50]
+            ]
+
+            var Patient_id = 1
+            var title = 'Title'
+
+            var startDate = new Date(2018, 11, 25)
+            var time_interval = 2
+            var time_interval_list = []
+            var endDate       
+            
+            yData = getYData()
+            var lower_bound = 30
+            var higher_bound = 80
+
+            function getRndInteger(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function appendDataPoint(data){
+                let time_interval_t = $("#time_interval_input").val();
+                if(Number.isNaN(Number(time_interval_t)) || Number(time_interval_t) < 1){
+                    alert('Time Interval Value Should Be Positive Interger')
+                }else{
+                    if(time_interval_t != ""){
+                        time_interval = time_interval_t
+                    }
+                    time_interval_list.push(time_interval)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
+                    data.push({
+                        y: 50,
+                        x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
+                    })
+                }
+            }
+
+            function deleteDataPoint(data){
+                if(data.length > 1){
+                    time_interval_list.pop()
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
+                    data.pop()
+                }else{
+                    alert("Nothing Left!")
+                }
+            }
+
+            function getSum(total, num) {
+                return total + Math.round(num);
+            }
+            function getYData() {
+                yData = []
+                yData_temp = []
+                for (j = 0; j < PysicalFunctionData[Patient_id].length; j++) {
+                    if (PysicalFunctionData[Patient_id][j]) {
+                        time_interval_list.push(time_interval)         
+                        yData_temp.push({
+                            y: PainData[Patient_id][j],
+                            x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))  
+                        })
+                        time_interval = 3
+                    }else{
+                        time_interval = time_interval + 3
+                    }
+                }
+                yData.push(yData_temp)
+                
+                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                return yData
+            }
+
+            function getXData(numPerType) {
+                xData = []
+                for (i = 0; i < numPerType; i++) {
+                    xData.push(new Date(2012, i, 1))
+                }
+                return xData
+            }
+
+            function RGY(value) {
+                if(lowerIsBetter){
+                    if (value < lower_bound) {
+                        return "#7FFF00"
+                    } else if (value < higher_bound) {
+                        return "#FFD700"
+                    } else {
+                        return "#E3170D"
+                    }
+                }else{
+                    if (value > higher_bound) {
+                        return "#7FFF00"
+                    } else if (value > lower_bound) {
+                        return "#FFD700"
+                    } else {
+                        return "#E3170D"
+                    }
+                }
+            }
+
+            function RGY_fill(value) {
+                if(lowerIsBetter){
+                    if (value < lower_bound) {
+                        return "white"
+                    } else if (value < higher_bound) {
+                        return "#FFD700"
+                    } else {
+                        return "#E3170D"
+                    }
+                }else{
+                    if (value > higher_bound) {
+                        return "white"
+                    } else if (value > lower_bound) {
+                        return "#FFD700"
+                    } else {
+                        return "#E3170D"
+                    }
+                }
+            }
+
+            function RGY_text(value) {
+                if(lowerIsBetter){
+                    if (value < lower_bound) {
+                        return "grey"
+                    } else if (value < higher_bound) {
+                        return "black"
+                    } else {
+                        return "white"
+                    }
+                }else{
+                    if (value > higher_bound) {
+                        return "grey"
+                    } else if (value > lower_bound) {
+                        return "black"
+                    } else {
+                        return "white"
+                    }
+                }
+            }
+
+            function renderChart(){
+                $("#Chart").empty();
+                var bb = document.querySelector('#Chart')
+                    .getBoundingClientRect()
+                var divWidth = bb.right - bb.left
+                var divHeight = bb.bottom - bb.top
+                var svgWidth = 0.9 * divWidth
+                var svgHeight = 0.5 * svgWidth
+                var svgMargin = {
+                    left: 40,
+                    top: 40,
+                    right: 45,
+                    bottom: 50
+                }
+
+                var radius = 20
+                var font_size = "130%"
+                var font_size_abs = 15
+                var ticks_interval = 3
+                var bar_width = 10
+                if(svgWidth < 700){
+                    console.log(svgWidth)
+                    radius = 12
+                    font_size = "80%"
+                    ticks_interval = 6
+                    font_size_abs = 10
+                    bar_width = 7
+                }
+
+                svg = d3.select("body")
+                    .select("#Chart")
+                    .append("svg")
+                    .attr("width", svgWidth)
+                    .attr("height", svgHeight)
+
+                for (i = 0; i < 10; i++) {
+                    svg.append("line")
+                        .attr('x1', `${svgMargin.left}`)
+                        .attr('x2', `${svgWidth - svgMargin.right}`)
+                        .attr('y1', `${svgMargin.top + i/10 * (svgHeight-svgMargin.top-svgMargin.bottom)}`)
+                        .attr('y2', `${svgMargin.top + i/10 * (svgHeight-svgMargin.top-svgMargin.bottom)}`)
+                        .attr("stroke", "#d3d3d3")
+                        .attr('fill-opacity', "0.8")
+                        .attr("stroke-width", "1px");
+                    svg.append("line")
+                        .attr('x1', `${svgMargin.left + i/10 * (svgWidth - svgMargin.right - svgMargin.left)}`)
+                        .attr('x2', `${svgMargin.left + i/10 * (svgWidth - svgMargin.right - svgMargin.left)}`)
+                        .attr('y1', `${svgMargin.top}`)
+                        .attr('y2', `${svgHeight-svgMargin.bottom}`)
+                        .attr("stroke", "#d3d3d3")
+                        .attr('fill-opacity', "0.8")
+                        .attr("stroke-width", "1px");
+                }
+
+                //legends
+                svg.append('circle')
+                    .attr('cx', `${svgWidth/2-200}`)
+                    .attr('cy', `${svgHeight-10}`)
+                    .attr('r', 5)
+                    // .attr('class', 'dot')
+                    .attr("fill", 'white')
+                    .attr("stroke", '#5785EF')
+                    .attr('stroke-width', '3')
+                svg.append('text')
+                    .text('HEMOGLOBIN A1c,POC')
+                    .attr('x', `${svgWidth/2-190}`)
+                    .attr('y', `${svgHeight - 5}`)
+                    .attr('fill-opacity', "1")
+                    // .attr('text-anchor', 'middle')
+                    // .attr('dominant-baseline', 'middle')
+                    .attr('font-size', 15)
+
+                svg.append("line")
+                    .attr('x1', `${svgWidth/2-10}`)
+                    .attr('x2', `${svgWidth/2+40}`)
+                    .attr('y1', `${svgHeight-10}`)
+                    .attr('y2', `${svgHeight-10}`)
+                    .attr("stroke", "#BBE5B4")
+                    .attr("stroke-width", "3px")
+                    .attr('stroke-dasharray', "10 6");
+                svg.append('text')
+                    .text('Normal Low')
+                    .attr('x', `${svgWidth/2+50}`)
+                    .attr('y', `${svgHeight - 5}`)
+                    .attr('fill-opacity', "1")
+                    .attr('font-size', 15)
+                svg.append("line")
+                    .attr('x1', `${svgWidth/2+150}`)
+                    .attr('x2', `${svgWidth/2+200}`)
+                    .attr('y1', `${svgHeight-10}`)
+                    .attr('y2', `${svgHeight-10}`)
+                    .attr("stroke", "#BBE5B4")
+                    .attr("stroke-width", "3px");
+                svg.append('text')
+                    .text('Normal High')
+                    .attr('x', `${svgWidth/2+210}`)
+                    .attr('y', `${svgHeight - 5}`)
+                    .attr('fill-opacity', "1")
+                    .attr('font-size', 15)
+                
+                var yScale = d3.scaleLinear()
+                    .range([svgHeight - svgMargin.bottom, svgMargin.top])
+                    .domain([0, 100])
+                svg.append('g')
+                    .call(d3.axisLeft(yScale))
+                    .attr('transform', `translate(${svgMargin.left},0)`)
+
+                var xScale = d3.scaleTime()
+                    .domain([startDate, endDate])
+                    .range([svgMargin.left, svgWidth - svgMargin.right])
+                    .nice();
+                var formatTime = d3.timeFormat("%m/%d/%Y")
+                xScale.ticks(d3.utcMonth.every(ticks_interval)).map(formatTime)
+                svg.append('g')
+                    // .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%m/%d/%Y")).ticks(svgWidth/180))
+                    // .call(d3.axisBottom(xScale).ticks(d3.utcMonth.every(3)))
+                    .call(d3.axisBottom(xScale))
+                    .attr('transform', `translate(0, ${svgHeight - svgMargin.bottom})`)
+                    .attr('class', "axisX")
+                    // d3.selectAll('g.tick text').attr('transform','rotate(30)')
+
+                svg.append("line")
+                    .attr('x1', `${svgMargin.left}`)
+                    .attr('x2', `${svgWidth - svgMargin.right}`)
+                    .attr('y1', yScale(higher_bound))
+                    .attr('y2', yScale(higher_bound))
+                    .attr("stroke", "#BBE5B4")
+                    .attr("stroke-width", "3px");
+
+                svg.append("line")
+                    .attr('x1', `${svgMargin.left}`)
+                    .attr('x2', `${svgWidth - svgMargin.right}`)
+                    .attr('y1', yScale(lower_bound))
+                    .attr('y2', yScale(lower_bound))
+                    .attr("stroke", "#BBE5B4")
+                    .attr("stroke-width", "3px")
+                    .attr('stroke-dasharray', "10 6");
+
+
+                svg.append('text')
+                    .text(title)
+                    .attr('font-size', font_size_abs*2)
+                    .attr('x', (svgWidth - svgMargin.right)/2)
+                    .attr('y', svgMargin.top-20)
+                    .attr('fill-opacity', "1")
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
+                    // .attr('font-size', 30)
+
+                var line = d3.line()
+                    .x(d => xScale(d.x))
+                    .y(d => yScale(d.y))
+
+                var trend_line = svg.append('path')
+
+                trend_line.datum(yData[0])
+                    .attr("fill", "none")
+                    .attr("stroke", "#5785EF")
+                    .attr('d', line)
+                    .attr('stroke-width', '3')
+
+
+                var enter_set = svg.selectAll('.dot1')
+                            .data(yData[0])
+                            .enter()
+                            .append('g')
+                            .attr("transform", d => {return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"})
+                            .call(d3.drag()
+                                // .on("start")
+                                .on("drag", d => {
+                                    // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
+                                    d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy)); 
+                                })
+                                // .on("end")
+                                .on("start.update drag.update end.update", update));
+
+            
+                var circles = enter_set.append('circle')
+                            .attr('r', 5)
+                            .attr("fill", 'white')
+                            .attr("stroke", '#5785EF')
+                            .attr('stroke-width', '3')
+
+                // var texts = enter_set.append('text')
+                //     .text(d => {
+                //         return d.y
+                //     })
+                //     .attr("transform", "translate(0," + radius/10 + ")")
+                //     .attr("fill", d => RGY_text(d.y))
+                //     .attr('font-weight', '700')
+                //     .attr('font-size', font_size)
+                //     .attr('text-anchor', 'middle')
+                //     .attr('dominant-baseline', 'middle')
+                
+                function update() {
+                    enter_set.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
+        
+                    // texts.text(d => {return Math.round(d.y)}).attr("fill", d => RGY_text(d.y))
+                    trend_line.datum(yData[0]).attr('d', line)
+                }
+            }
+            // renderView()
+            renderChart()
+                /*---- Interaction -----*/
+            $(document).ready(function() {
+                $("#startYearButton").click(function() {
+                    let input_y = Number($("#startYearInput").val())
+                    if(!Number.isNaN(input_y)){
+                        startYear = input_y - 1
+                        startDate = new Date(startYear, 11, 25)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)  
+
+                        for(let i = 0; i < yData[0].length; i++){
+                            yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0,i+1).reduce(getSum, 0))  
+                        }   
+                        renderChart()
+                    }else{
+                        alert("Input Wrong")
+                    }
+
+                })
+                $("#LowerBoundButton").click(function() {
+                    let lower_bound_t = Number($("#LowerBound").val());
+                    if(Number.isNaN(lower_bound_t) || lower_bound_t > higher_bound || lower_bound_t < 0){
+                        alert("Input Wrong")
+                    }else{
+                        lower_bound = lower_bound_t
+                        renderChart()
+                    }
+                })
+                $("#UpperBoundButton").click(function() {
+                    let higher_bound_t = Number($("#UpperBound").val());
+                    if(Number.isNaN(higher_bound_t) || higher_bound_t < lower_bound || higher_bound_t > 100){
+                        alert("Input Wrong")
+                    }else{
+                        higher_bound = higher_bound_t
+                        renderChart()
+                    }
+                })
+                $("#whichIsBetterBtn").click(function() {
+                    if(lowerIsBetter){
+                        lowerIsBetter = false
+                    }else{
+                        lowerIsBetter = true
+                    }
+                    renderChart()
+                })
+                $("#appendDataBtn").click(function() {
+                    appendDataPoint(yData[0])
+                    renderChart()
+                })
+                $("#deleteDataBtn").click(function() {
+                    deleteDataPoint(yData[0])
+                    renderChart()
+                })
+                $("#changeTitleButton").click(function() {
+                    let title_t = $("#titleInput").val();
+                    if(title_t != ""){
+                        title = title_t
+                        renderChart()
+                    }
+                })
+            });
+        </script>
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+        </script>
