@@ -61,8 +61,6 @@
 
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
-
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -98,8 +96,7 @@
                             </div>
                         </div>
                         <div class="col-lg-3">
-                            <button class="btn btn-primary" type="button" id="surgeryBtn">Surgery Option</button>
-                            <button class="btn btn-primary" type="button" id="duplicateBtn">Duplicate</button>
+                            <!-- <button class="btn btn-primary" type="button" id="whichIsBetterBtn">Switch Higher / Lower</button> -->
                         </div>
                     </div>
                 </form>
@@ -123,8 +120,6 @@
         </div>
         <script>
             var lowerIsBetter = false
-            var isSurgery = true
-            var isDuplicate = false
             paraOfYData = {
                 min: 22,
                 max: 64
@@ -213,7 +208,6 @@
                     }
                 }
                 yData.push(yData_temp)
-                yData.push(yData_temp)
                 
                 endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
                 return yData
@@ -293,14 +287,14 @@
                     .getBoundingClientRect()
                 var divWidth = bb.right - bb.left
                 var divHeight = bb.bottom - bb.top
+                var svgWidth = 0.9 * divWidth
+                var svgHeight = 0.5 * svgWidth
                 var svgMargin = {
                     left: 40,
                     top: 40,
-                    right: 200,
+                    right: 45,
                     bottom: 50
                 }
-                var svgWidth = divWidth - svgMargin.left - svgMargin.right
-                var svgHeight = 0.5 * svgWidth
 
                 var radius = 20
                 var font_size = "130%"
@@ -319,97 +313,76 @@
                 svg = d3.select("body")
                     .select("#Chart")
                     .append("svg")
-                    .attr("width", svgWidth + svgMargin.left + svgMargin.right)
-                    .attr("height", svgHeight + svgMargin.top + svgMargin.bottom)
+                    .attr("width", svgWidth)
+                    .attr("height", svgHeight)
 
                 for (i = 0; i < 10; i++) {
                     svg.append("line")
                         .attr('x1', `${svgMargin.left}`)
-                        .attr('x2', `${svgWidth + svgMargin.left}`)
-                        .attr('y1', `${svgMargin.top + i/10 * (svgHeight)}`)
-                        .attr('y2', `${svgMargin.top + i/10 * (svgHeight)}`)
+                        .attr('x2', `${svgWidth - svgMargin.right}`)
+                        .attr('y1', `${svgMargin.top + i/10 * (svgHeight-svgMargin.top-svgMargin.bottom)}`)
+                        .attr('y2', `${svgMargin.top + i/10 * (svgHeight-svgMargin.top-svgMargin.bottom)}`)
                         .attr("stroke", "#d3d3d3")
                         .attr('fill-opacity', "0.8")
                         .attr("stroke-width", "1px");
                     svg.append("line")
-                        .attr('x1', `${svgMargin.left + i/10 * (svgWidth)}`)
-                        .attr('x2', `${svgMargin.left + i/10 * (svgWidth)}`)
+                        .attr('x1', `${svgMargin.left + i/10 * (svgWidth - svgMargin.right - svgMargin.left)}`)
+                        .attr('x2', `${svgMargin.left + i/10 * (svgWidth - svgMargin.right - svgMargin.left)}`)
                         .attr('y1', `${svgMargin.top}`)
-                        .attr('y2', `${svgHeight+svgMargin.top}`)
+                        .attr('y2', `${svgHeight-svgMargin.bottom}`)
                         .attr("stroke", "#d3d3d3")
                         .attr('fill-opacity', "0.8")
                         .attr("stroke-width", "1px");
                 }
 
-                let numberOfLegends = 3
                 //legends
-                if(isDuplicate){
-                    svg.append('circle')
-                        .attr('cx', `${svgWidth + svgMargin.left + 40}`)
-                        .attr('cy', `${svgHeight/(2*numberOfLegends) + svgMargin.top - 13}`)
-                        .attr('r', 5)
-                        // .attr('class', 'dot')
-                        .attr("fill", 'white')
-                        .attr("stroke", '#ef8a62')
-                        .attr('stroke-width', '3')
-                    svg.append('text')
-                        .text('Physical Function')
-                        .attr('x', `${svgWidth + svgMargin.left + 30}`)
-                        .attr('y', `${svgHeight/(2*numberOfLegends)+ svgMargin.top + 13}`)
-                        .attr('fill-opacity', "1")
-                        // .attr('text-anchor', 'middle')
-                        // .attr('dominant-baseline', 'middle')
-                        .attr('font-size', 15)
-                }
-
                 svg.append('circle')
-                    .attr('cx', `${svgWidth + svgMargin.left + 40}`)
-                    .attr('cy', `${svgHeight/(2*numberOfLegends)*2 + svgMargin.top - 13}`)
+                    .attr('cx', `${svgWidth/2-200}`)
+                    .attr('cy', `${svgHeight-10}`)
                     .attr('r', 5)
                     // .attr('class', 'dot')
                     .attr("fill", 'white')
                     .attr("stroke", '#5785EF')
                     .attr('stroke-width', '3')
                 svg.append('text')
-                    .text('Pain')
-                    .attr('x', `${svgWidth + svgMargin.left + 30}`)
-                    .attr('y', `${svgHeight/(2*numberOfLegends)*2+ svgMargin.top + 13}`)
+                    .text('HEMOGLOBIN A1c,POC')
+                    .attr('x', `${svgWidth/2-190}`)
+                    .attr('y', `${svgHeight - 5}`)
                     .attr('fill-opacity', "1")
                     // .attr('text-anchor', 'middle')
                     // .attr('dominant-baseline', 'middle')
                     .attr('font-size', 15)
 
                 svg.append("line")
-                    .attr('x1', `${svgWidth + svgMargin.left + 30}`)
-                    .attr('x2', `${svgWidth + svgMargin.left + 80}`)
-                    .attr('y1', `${svgHeight/(2*numberOfLegends)*3 + svgMargin.top - 13}`)
-                    .attr('y2', `${svgHeight/(2*numberOfLegends)*3 + svgMargin.top - 13}`)
+                    .attr('x1', `${svgWidth/2-10}`)
+                    .attr('x2', `${svgWidth/2+40}`)
+                    .attr('y1', `${svgHeight-10}`)
+                    .attr('y2', `${svgHeight-10}`)
                     .attr("stroke", "#BBE5B4")
                     .attr("stroke-width", "3px")
                     .attr('stroke-dasharray', "10 6");
                 svg.append('text')
                     .text('Normal Low')
-                    .attr('x', `${svgWidth + svgMargin.left + 30}`)
-                    .attr('y', `${svgHeight/(2*numberOfLegends)*3 + svgMargin.top + 13}`)
+                    .attr('x', `${svgWidth/2+50}`)
+                    .attr('y', `${svgHeight - 5}`)
                     .attr('fill-opacity', "1")
                     .attr('font-size', 15)
-
                 svg.append("line")
-                    .attr('x1', `${svgWidth + svgMargin.left + 30}`)
-                    .attr('x2', `${svgWidth + svgMargin.left + 80}`)
-                    .attr('y1', `${svgHeight/(2*numberOfLegends)*4 + svgMargin.top - 13}`)
-                    .attr('y2', `${svgHeight/(2*numberOfLegends)*4 + svgMargin.top - 13}`)
+                    .attr('x1', `${svgWidth/2+150}`)
+                    .attr('x2', `${svgWidth/2+200}`)
+                    .attr('y1', `${svgHeight-10}`)
+                    .attr('y2', `${svgHeight-10}`)
                     .attr("stroke", "#BBE5B4")
                     .attr("stroke-width", "3px");
                 svg.append('text')
                     .text('Normal High')
-                    .attr('x', `${svgWidth + svgMargin.left + 30}`)
-                    .attr('y', `${svgHeight/(2*numberOfLegends)*4 + svgMargin.top + 13}`)
+                    .attr('x', `${svgWidth/2+210}`)
+                    .attr('y', `${svgHeight - 5}`)
                     .attr('fill-opacity', "1")
                     .attr('font-size', 15)
                 
                 var yScale = d3.scaleLinear()
-                    .range([svgHeight + svgMargin.top, svgMargin.top])
+                    .range([svgHeight - svgMargin.bottom, svgMargin.top])
                     .domain([0, 100])
                 svg.append('g')
                     .call(d3.axisLeft(yScale))
@@ -417,7 +390,7 @@
 
                 var xScale = d3.scaleTime()
                     .domain([startDate, endDate])
-                    .range([svgMargin.left, svgWidth + svgMargin.left])
+                    .range([svgMargin.left, svgWidth - svgMargin.right])
                     .nice();
                 var formatTime = d3.timeFormat("%m/%d/%Y")
                 xScale.ticks(d3.utcMonth.every(ticks_interval)).map(formatTime)
@@ -425,13 +398,13 @@
                     // .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%m/%d/%Y")).ticks(svgWidth/180))
                     // .call(d3.axisBottom(xScale).ticks(d3.utcMonth.every(3)))
                     .call(d3.axisBottom(xScale))
-                    .attr('transform', `translate(0, ${svgHeight + svgMargin.top})`)
+                    .attr('transform', `translate(0, ${svgHeight - svgMargin.bottom})`)
                     .attr('class', "axisX")
                     // d3.selectAll('g.tick text').attr('transform','rotate(30)')
 
                 svg.append("line")
                     .attr('x1', `${svgMargin.left}`)
-                    .attr('x2', `${svgWidth + svgMargin.left}`)
+                    .attr('x2', `${svgWidth - svgMargin.right}`)
                     .attr('y1', yScale(higher_bound))
                     .attr('y2', yScale(higher_bound))
                     .attr("stroke", "#BBE5B4")
@@ -439,7 +412,7 @@
 
                 svg.append("line")
                     .attr('x1', `${svgMargin.left}`)
-                    .attr('x2', `${svgWidth + svgMargin.left}`)
+                    .attr('x2', `${svgWidth - svgMargin.right}`)
                     .attr('y1', yScale(lower_bound))
                     .attr('y2', yScale(lower_bound))
                     .attr("stroke", "#BBE5B4")
@@ -450,7 +423,7 @@
                 svg.append('text')
                     .text(title)
                     .attr('font-size', font_size_abs*2)
-                    .attr('x', svgMargin.left + svgWidth/2)
+                    .attr('x', (svgWidth - svgMargin.right)/2)
                     .attr('y', svgMargin.top-20)
                     .attr('fill-opacity', "1")
                     .attr('text-anchor', 'middle')
@@ -460,37 +433,6 @@
                 var line = d3.line()
                     .x(d => xScale(d.x))
                     .y(d => yScale(d.y))
-
-                if(isDuplicate){
-                    var data_t = _.cloneDeep(yData[1])
-                    var trend_line_2 = svg.append('path')
-                    trend_line_2.datum(data_t)
-                        .attr("fill", "none")
-                        .attr("stroke", "#ef8a62")
-                        .attr('d', line)
-                        .attr('stroke-width', '3')
-                    
-                    var enter_set_2 = svg.selectAll('.dot2')
-                            .data(data_t)
-                            .enter()
-                            .append('g')
-                            .attr("transform", d => {return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"})
-                            .call(d3.drag()
-                                // .on("start")
-                                .on("drag", d => {
-                                    // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
-                                    d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy)); 
-                                })
-                                // .on("end")
-                                .on("start.update drag.update end.update", update_2));
-                    
-                    var circles_2 = enter_set_2.append('circle')
-                        .attr('r', 5)
-                        .attr("fill", 'white')
-                        .attr("stroke", '#ef8a62')
-                        .attr('stroke-width', '3')
-                }
-
 
                 var trend_line = svg.append('path')
 
@@ -521,36 +463,6 @@
                             .attr("fill", 'white')
                             .attr("stroke", '#5785EF')
                             .attr('stroke-width', '3')
-                
-                if(isSurgery){
-                    var surgeryDate = d3.timeMonth.offset(startDate, 5)  
-                    var surg_g = svg.append('g')
-                                    .attr("transform","translate(" + xScale(surgeryDate) + ",0)")
-                                    .call(d3.drag()
-                                                .on("drag", d => {
-                                                    surgeryDate = Math.round(xScale.invert(xScale(surgeryDate) + d3.event.dx));  
-                                                })
-                                                .on("drag.update", update_surg));
-                    var surg_line = surg_g.append("line")
-                            .attr('y1', `${svgMargin.top}`)
-                            .attr('y2', `${svgHeight + svgMargin.top + 40}`)
-                            .attr("stroke", "#d3d3d3")
-                            .attr("stroke-opacity", '0.8')
-                            .attr("stroke-width", "2px")
-                            .attr("stroke-dasharray", "10, 10")
-                    
-                    var surg_text = surg_g.append('text')
-                            .text('Surgery:' + formatTime(surgeryDate))
-                            .attr('y', svgHeight + svgMargin.top + 40)
-                            .attr('text-anchor', 'middle')
-                            .attr("font-size", font_size_abs*1.1)
-                }
-
-
-                function update_surg(){
-                    surg_g.attr("transform","translate(" + xScale(surgeryDate) + ",0)")
-                    surg_text.text('Surgery:' + formatTime(surgeryDate))
-                }
 
                 // var texts = enter_set.append('text')
                 //     .text(d => {
@@ -568,12 +480,6 @@
         
                     // texts.text(d => {return Math.round(d.y)}).attr("fill", d => RGY_text(d.y))
                     trend_line.datum(yData[0]).attr('d', line)
-                }
-                function update_2() {
-                    enter_set_2.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
-        
-                    // texts.text(d => {return Math.round(d.y)}).attr("fill", d => RGY_text(d.y))
-                    trend_line_2.datum(data_t).attr('d', line)
                 }
             }
             // renderView()
@@ -636,22 +542,6 @@
                         title = title_t
                         renderChart()
                     }
-                })
-                $("#surgeryBtn").click(function() {
-                    if(isSurgery){
-                        isSurgery = false
-                    }else{
-                        isSurgery = true
-                    }
-                    renderChart()
-                })
-                $("#duplicateBtn").click(function() {
-                    if(isDuplicate){
-                        isDuplicate = false
-                    }else{
-                        isDuplicate = true
-                    }
-                    renderChart()
                 })
             });
         </script>
