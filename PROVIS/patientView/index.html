@@ -463,6 +463,10 @@
 
                 if(isDuplicate){
                     var data_t = _.cloneDeep(yData[1])
+                    console.log(data_t)
+                    for(let i = 0; i < data_t.length; i++){
+                        data_t[i].y = data_t[i].y - 5
+                    }
                     var trend_line_2 = svg.append('path')
                     trend_line_2.datum(data_t)
                         .attr("fill", "none")
