@@ -6,7 +6,7 @@
         .row {
             margin-top: 1rem !important;
         }
-
+        
         .axisY line {
             stroke: black;
             stroke-width: 1;
@@ -61,6 +61,8 @@
 
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -83,36 +85,45 @@
                     <div class="row">
                         <div class="col-lg-3">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="startYearInput" placeholder = "Set Start Year"/>
+                                <input type="text" class="form-control" id="startYearInput" placeholder="Set Start Year" />
                                 <span class="input-group-btn"><button class="btn btn-primary" type="button" id="startYearButton">StartYear</button></span>
                             </div>
                         </div>
-                        <div class="col-lg-6">
+                        <div class="col-lg-5">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="LowerBound" placeholder = "Set Lower Bound"/>
+                                <input type="text" class="form-control" id="LowerBound" placeholder="Set Lower Bound" />
                                 <span class="input-group-btn"><button class="btn btn-primary" type="button" id="LowerBoundButton">LwrBnd</button></span>
-                                <input type="text" class="form-control" id="UpperBound" placeholder = "Set Higher Bound"/>
+                                <input type="text" class="form-control" id="UpperBound" placeholder="Set Higher Bound" />
                                 <span class="input-group-btn"><button class="btn btn-primary" type="button" id="UpperBoundButton">UprBnd</button></span>
                             </div>
                         </div>
-                        <div class="col-lg-3">
-                            <button class="btn btn-primary" type="button" id="whichIsBetterBtn">Switch Higher / Lower</button>
+                        <div class="col-lg-4">
+                            <!-- <button class="btn btn-primary" type="button" id="addLineBtn">Add Line</button>
+                            <button class="btn btn-primary" type="button" id="deleteLineBtn">Del Line</button> -->
+                            <button class="btn btn-primary" type="button" id="whichIsBetterBtn">H/L Better</button>
+                            <button class="btn btn-primary" type="button" id="duplicateBtn">Duplicate</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
-        <div class = "row">
-            <div class="col-lg-5">
+        <div class="row">
+            <div class="col-lg-3">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="titleInput" placeholder = "Input Title Here"/>
+                    <input type="text" class="form-control" id="titleInput" placeholder="Input Title Here" />
                     <button class="btn btn-primary" type="button" id="changeTitleButton">Set Title</button>
                 </div>
             </div>
-            <div class="col-lg-2"></div>
             <div class="col-lg-5">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="time_interval_input" placeholder = "Time Interval, default 3(months)"/>
+                    <input type="text" class="form-control" id="surgeryNameInput" placeholder="Input SurgeryName" />
+                    <button class="btn btn-primary" type="button" id="changeSurgeryNameButton">Set SurgeryName</button>
+                    <button class="btn btn-primary" type="button" id="surgeryBtn">Surgery Option</button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="time_interval_input" placeholder="Time Interval, default 6(months)" />
                     <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
                     <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
                 </div>
@@ -149,13 +160,21 @@
             var Patient_id = 1
             var title = 'Title'
 
-            var startDate = new Date(2018, 11, 25)
+            var startDate = new Date(2015, 11, 25)
             var time_interval_total = 3
             var time_interval = 3
             var time_interval_list = []
-            var endDate       
-            
+            var endDate
+            var isSurgery = true
+            var isDuplicate = false
+            var numberOfLine = 1
+            var lineObject_list = []
+
+            var SurgeryName = 'Surgery'
+            var surgeryDate = d3.timeMonth.offset(startDate, 5)
+
             yData = getYData()
+            var lineData_list = [yData[0]]
             var lower_bound = 20
             var higher_bound = 60
 
@@ -163,29 +182,37 @@
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
-            function appendDataPoint(data){
+            function appendDataPoint(data) {
                 let time_interval_t = $("#time_interval_input").val();
-                if(Number.isNaN(Number(time_interval_t)) || Number(time_interval_t) < 1){
-                    alert('Time Interval Value Should Be Positive Interger')
-                }else{
-                    if(time_interval_t != ""){
-                        time_interval = time_interval_t
-                    }
+                if (time_interval_t == "") {
+                    time_interval = 6
                     time_interval_list.push(time_interval)
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
                     data.push({
                         y: 50,
                         x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
                     })
+                } else {
+                    if (Number.isNaN(Number(time_interval_t)) || Number(time_interval_t) < 1) {
+                        alert('Time Interval Value Should Be Positive Interger')
+                    } else {
+                        time_interval = time_interval_t
+                        time_interval_list.push(time_interval)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                        data.push({
+                            y: 50,
+                            x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
+                        })
+                    }
                 }
             }
 
-            function deleteDataPoint(data){
-                if(data.length > 1){
+            function deleteDataPoint(data) {
+                if (data.length > 1) {
                     time_interval_list.pop()
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3) 
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
                     data.pop()
-                }else{
+                } else {
                     alert("Nothing Left!")
                 }
             }
@@ -193,23 +220,24 @@
             function getSum(total, num) {
                 return total + Math.round(num);
             }
+
             function getYData() {
                 yData = []
                 yData_temp = []
                 for (j = 0; j < PysicalFunctionData[Patient_id].length; j++) {
                     if (PysicalFunctionData[Patient_id][j]) {
-                        time_interval_list.push(time_interval)         
+                        time_interval_list.push(time_interval)
                         yData_temp.push({
                             y: PainData[Patient_id][j],
-                            x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))  
+                            x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
                         })
                         time_interval = 3
-                    }else{
+                    } else {
                         time_interval = time_interval + 3
                     }
                 }
                 yData.push(yData_temp)
-                
+
                 endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
                 return yData
             }
@@ -223,7 +251,7 @@
             }
 
             function RGY(value) {
-                if(lowerIsBetter){
+                if (lowerIsBetter) {
                     if (value < lower_bound) {
                         return "#7FFF00"
                     } else if (value < higher_bound) {
@@ -231,7 +259,7 @@
                     } else {
                         return "#E3170D"
                     }
-                }else{
+                } else {
                     if (value > higher_bound) {
                         return "#7FFF00"
                     } else if (value > lower_bound) {
@@ -243,7 +271,7 @@
             }
 
             function RGY_fill(value) {
-                if(lowerIsBetter){
+                if (lowerIsBetter) {
                     if (value < lower_bound) {
                         return "white"
                     } else if (value < higher_bound) {
@@ -251,7 +279,7 @@
                     } else {
                         return "#E3170D"
                     }
-                }else{
+                } else {
                     if (value > higher_bound) {
                         return "white"
                     } else if (value > lower_bound) {
@@ -263,7 +291,7 @@
             }
 
             function RGY_text(value) {
-                if(lowerIsBetter){
+                if (lowerIsBetter) {
                     if (value < lower_bound) {
                         return "grey"
                     } else if (value < higher_bound) {
@@ -271,7 +299,7 @@
                     } else {
                         return "white"
                     }
-                }else{
+                } else {
                     if (value > higher_bound) {
                         return "grey"
                     } else if (value > lower_bound) {
@@ -282,7 +310,7 @@
                 }
             }
 
-            function renderChart(){
+            function renderChart() {
                 $("#Chart").empty();
                 var bb = document.querySelector('#Chart')
                     .getBoundingClientRect()
@@ -302,7 +330,7 @@
                 var font_size_abs = 15
                 var ticks_interval = 3
                 var bar_width = 10
-                if(svgWidth < 700){
+                if (svgWidth < 700) {
                     console.log(svgWidth)
                     radius = 12
                     font_size = "80%"
@@ -419,38 +447,38 @@
                     .attr('text-anchor', 'middle')
                     .attr('dominant-baseline', 'middle')
 
-                var surgeryDate = d3.timeMonth.offset(startDate, 5)  
-                var surg_g = svg.append('g')
-                                .attr("transform","translate(" + xScale(surgeryDate) + ",0)")
-                                .call(d3.drag()
-                                            .on("drag", d => {
-                                                surgeryDate = Math.round(xScale.invert(xScale(surgeryDate) + d3.event.dx));  
-                                            })
-                                            .on("drag.update", update_surg));
-                var surg_line = surg_g.append("line")
+                if (isSurgery) {
+                    var surg_g = svg.append('g')
+                        .attr("transform", "translate(" + xScale(surgeryDate) + ",0)")
+                        .call(d3.drag()
+                            .on("drag", d => {
+                                surgeryDate = Math.round(xScale.invert(xScale(surgeryDate) + d3.event.dx));
+                            })
+                            .on("drag.update", update_surg));
+                    var surg_line = surg_g.append("line")
                         .attr('y1', `${svgMargin.top}`)
                         .attr('y2', `${svgHeight - 0.5 * svgMargin.bottom}`)
                         .attr("stroke", "#d3d3d3")
-                        .attr("stroke-opacity", '0.8')
-                        .attr("stroke-width", "2px")
-                        .attr("stroke-dasharray", "10, 10")
-                
-                var surg_text = surg_g.append('text')
-                        .text('Surgery:' + formatTime(surgeryDate))
+                        .attr("stroke-opacity", '1')
+                        .attr("stroke-width", "3px")
+                        .attr("stroke-dasharray", "10, 5")
+
+                    var surg_text = surg_g.append('text')
+                        .text(SurgeryName + ':' + formatTime(surgeryDate))
                         .attr('y', svgHeight - 5)
                         .attr('text-anchor', 'middle')
-                        .attr("font-size", font_size_abs*1.1)
-                
+                        .attr("font-size", font_size_abs * 1.1)
+                }
 
-                function update_surg(){
-                    surg_g.attr("transform","translate(" + xScale(surgeryDate) + ",0)")
+                function update_surg() {
+                    surg_g.attr("transform", "translate(" + xScale(surgeryDate) + ",0)")
                     surg_text.text('Surgery:' + formatTime(surgeryDate))
                 }
 
                 let conten_t
-                if(lowerIsBetter){
+                if (lowerIsBetter) {
                     conten_t = "Lower is better"
-                }else{
+                } else {
                     conten_t = "Higher is better"
                 }
 
@@ -465,9 +493,9 @@
 
                 svg.append('text')
                     .text(title)
-                    .attr('font-size', font_size_abs*2)
-                    .attr('x', (svgWidth - svgMargin.right)/2)
-                    .attr('y', svgMargin.top-20)
+                    .attr('font-size', font_size_abs * 2)
+                    .attr('x', (svgWidth - svgMargin.right) / 2)
+                    .attr('y', svgMargin.top - 20)
                     .attr('fill-opacity', "1")
                     .attr('text-anchor', 'middle')
                     .attr('dominant-baseline', 'middle')
@@ -477,54 +505,195 @@
                     .x(d => xScale(d.x))
                     .y(d => yScale(d.y))
 
-                var trend_line = svg.append('path')
+                function renderLine(data) {
+                    var trend_line = svg.append('path')
 
-                trend_line.datum(yData[0])
-                    .attr("fill", "none")
-                    .attr("stroke", 'black')
-                    .attr('d', line)
-                    // .attr('transform', `translate(${svgMargin.left}, ${svgMargin.top})`)
-                    .attr('stroke-width', '2')
+                    trend_line.datum(data)
+                        .attr("fill", "none")
+                        .attr("stroke", 'black')
+                        .attr('d', line)
+                        // .attr('transform', `translate(${svgMargin.left}, ${svgMargin.top})`)
+                        .attr('stroke-width', '2')
 
 
-                var enter_set = svg.selectAll('.dot1')
-                            .data(yData[0])
-                            .enter()
-                            .append('g')
-                            .attr("transform", d => {return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"})
-                            .call(d3.drag()
-                                // .on("start")
-                                .on("drag", d => {
-                                    // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
-                                    d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy)); 
-                                })
-                                // .on("end")
-                                .on("start.update drag.update end.update", update));
+                    var enter_set = svg.selectAll('.dot1')
+                        .data(data)
+                        .enter()
+                        .append('g')
+                        .attr("transform", d => {
+                            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"
+                        })
+                        .call(d3.drag()
+                            // .on("start")
+                            .on("drag", d => {
+                                // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
+                                d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy));
+                            })
+                            // .on("end")
+                            .on("start.update drag.update end.update", update));
 
-            
-                var circles = enter_set.append('circle')
-                            .attr('r', radius)
-                            .attr("fill", d => RGY_fill(d.y))
-                            .attr("stroke", d => RGY(d.y))
-                            .attr("stroke-width", '3')
 
-                var texts = enter_set.append('text')
-                    .text(d => {
-                        return d.y
-                    })
-                    .attr("transform", "translate(0," + radius/10 + ")")
-                    .attr("fill", d => RGY_text(d.y))
-                    .attr('font-weight', '700')
-                    .attr('font-size', font_size)
-                    .attr('text-anchor', 'middle')
-                    .attr('dominant-baseline', 'middle')
-                
-                function update() {
-                    enter_set.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
-                    circles.attr("fill", d => RGY_fill(d.y)).attr("stroke", d => RGY(d.y))
-                    texts.text(d => {return Math.round(d.y)}).attr("fill", d => RGY_text(d.y))
-                    trend_line.datum(yData[0]).attr('d', line)
+                    var circles = enter_set.append('circle')
+                        .attr('r', radius)
+                        .attr("fill", d => RGY_fill(d.y))
+                        .attr("stroke", d => RGY(d.y))
+                        .attr("stroke-width", '3')
+
+                    var texts = enter_set.append('text')
+                        .text(d => {
+                            return d.y
+                        })
+                        .attr("transform", "translate(0," + radius / 10 + ")")
+                        .attr("fill", d => RGY_text(d.y))
+                        .attr('font-weight', '700')
+                        .attr('font-size', font_size)
+                        .attr('text-anchor', 'middle')
+                        .attr('dominant-baseline', 'middle')
+
+                    function update() {
+                        enter_set.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
+                        circles.attr("fill", d => RGY_fill(d.y)).attr("stroke", d => RGY(d.y))
+                        texts.text(d => {
+                            return Math.round(d.y)
+                        }).attr("fill", d => RGY_text(d.y))
+                        trend_line.datum(data).attr('d', line)
+                    }
                 }
+
+                function renderLine_2(data) {
+                    var trend_line_2 = svg.append('path')
+
+                    trend_line_2.datum(data)
+                        .attr("fill", "none")
+                        .attr("stroke", 'black')
+                        .attr('d', line)
+                        // .attr('transform', `translate(${svgMargin.left}, ${svgMargin.top})`)
+                        .attr('stroke-width', '2')
+
+
+                    var enter_set_2 = svg.selectAll('.dot1')
+                        .data(data)
+                        .enter()
+                        .append('g')
+                        .attr("transform", d => {
+                            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"
+                        })
+                        .call(d3.drag()
+                            // .on("start")
+                            .on("drag", d => {
+                                // d.x = Math.round(xScale.invert(xScale(d.x) + d3.event.dx)); 
+                                d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy));
+                            })
+                            // .on("end")
+                            .on("start.update drag.update end.update", update_2));
+
+
+                    var circles_2 = enter_set_2.append('circle')
+                        .attr('r', radius)
+                        .attr("fill", d => RGY_fill(d.y))
+                        .attr("stroke", d => RGY(d.y))
+                        .attr("stroke-width", '3')
+
+                    var texts_2 = enter_set_2.append('text')
+                        .text(d => {
+                            return d.y
+                        })
+                        .attr("transform", "translate(0," + radius / 10 + ")")
+                        .attr("fill", d => RGY_text(d.y))
+                        .attr('font-weight', '700')
+                        .attr('font-size', font_size)
+                        .attr('text-anchor', 'middle')
+                        .attr('dominant-baseline', 'middle')
+
+                    function update_2() {
+                        enter_set_2.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
+                        circles_2.attr("fill", d => RGY_fill(d.y)).attr("stroke", d => RGY(d.y))
+                        texts_2.text(d => {
+                            return Math.round(d.y)
+                        }).attr("fill", d => RGY_text(d.y))
+                        trend_line_2.datum(data).attr('d', line)
+                    }
+                }
+
+                renderLine(yData[0])
+                if (isDuplicate) {
+                    var data_t = _.cloneDeep(yData[0])
+                    for (let i = 0; i < data_t.length; i++) {
+                        data_t[i].y = data_t[i].y + 15
+                    }
+                    renderLine_2(data_t)
+                }
+
+                // function createLineObject(data) {
+                //     let trend_line = svg.append('path')
+
+                //     trend_line.datum(data)
+                //         .attr("fill", "none")
+                //         .attr("stroke", 'black')
+                //         .attr('d', line)
+                //         // .attr('transform', `translate(${svgMargin.left}, ${svgMargin.top})`)
+                //         .attr('stroke-width', '2')
+
+
+                //     let enter_set = svg.selectAll('.dot1')
+                //         .data(data)
+                //         .enter()
+                //         .append('g')
+                //         .attr("transform", d => {
+                //             return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"
+                //         })
+
+                //     // enter_set.call(d3.drag()
+                //     //     .on("drag", d => {
+                //     //         d.y = Math.round(yScale.invert(yScale(d.y) + d3.event.dy));
+                //     //     })
+                //     //     .on("drag.update", update));
+
+
+                //     let circles = enter_set.append('circle')
+                //         .attr('r', radius)
+                //         .attr("fill", d => RGY_fill(d.y))
+                //         .attr("stroke", d => RGY(d.y))
+                //         .attr("stroke-width", '3')
+
+                //     let texts = enter_set.append('text')
+                //         .text(d => {
+                //             return d.y
+                //         })
+                //         .attr("transform", "translate(0," + radius / 10 + ")")
+                //         .attr("fill", d => RGY_text(d.y))
+                //         .attr('font-weight', '700')
+                //         .attr('font-size', font_size)
+                //         .attr('text-anchor', 'middle')
+                //         .attr('dominant-baseline', 'middle')
+
+                //     console.log(enter_set)
+
+                //     // enter_set, circles, texts, trend_line
+                //     // function update() {
+                //     //     enter_set.attr("transform", d => "translate(" + xScale(d.x) + "," + yScale(d.y) + ")")
+                //     //     circles.attr("fill", d => RGY_fill(d.y)).attr("stroke", d => RGY(d.y))
+                //     //     texts.text(d => {
+                //     //         return Math.round(d.y)
+                //     //     }).attr("fill", d => RGY_text(d.y))
+                //     //     trend_line.datum(yData[0]).attr('d', line)
+                //     // }
+                // }
+
+                // for (let i = 0; i < numberOfLine; i++) {
+                //     console.log(yData[0])
+
+                //     for (let j = 0; j < lineData_list[i].length; j++) {
+                //         lineData_list[i][j].y = lineData_list[i][j].y + 5 * i
+                //     }
+                //     // console.log(lineObject_list)
+                //     // var data_t = _.cloneDeep(yData[1])
+                //     // let data_t = yData[0]
+                //     // var result_t = renderLine(yData[0])
+                //     createLineObject(lineData_list)
+                //         // console.log(result_t)
+                //         // update(result_t[0], result_t[1], result_t[2], result_t[3])
+                // }
             }
             // renderView()
             renderChart()
@@ -532,42 +701,42 @@
             $(document).ready(function() {
                 $("#startYearButton").click(function() {
                     let input_y = Number($("#startYearInput").val())
-                    if(!Number.isNaN(input_y)){
+                    if (!Number.isNaN(input_y)) {
                         startYear = input_y - 1
                         startDate = new Date(startYear, 11, 25)
-                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)  
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
 
-                        for(let i = 0; i < yData[0].length; i++){
-                            yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0,i+1).reduce(getSum, 0))  
-                        }   
+                        for (let i = 0; i < yData[0].length; i++) {
+                            yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0, i + 1).reduce(getSum, 0))
+                        }
                         renderChart()
-                    }else{
+                    } else {
                         alert("Input Wrong")
                     }
 
                 })
                 $("#LowerBoundButton").click(function() {
                     let lower_bound_t = Number($("#LowerBound").val());
-                    if(Number.isNaN(lower_bound_t) || lower_bound_t > higher_bound || lower_bound_t < 0){
+                    if (Number.isNaN(lower_bound_t) || lower_bound_t > higher_bound || lower_bound_t < 0) {
                         alert("Input Wrong")
-                    }else{
+                    } else {
                         lower_bound = lower_bound_t
                         renderChart()
                     }
                 })
                 $("#UpperBoundButton").click(function() {
                     let higher_bound_t = Number($("#UpperBound").val());
-                    if(Number.isNaN(higher_bound_t) || higher_bound_t < lower_bound || higher_bound_t > 100){
+                    if (Number.isNaN(higher_bound_t) || higher_bound_t < lower_bound || higher_bound_t > 100) {
                         alert("Input Wrong")
-                    }else{
+                    } else {
                         higher_bound = higher_bound_t
                         renderChart()
                     }
                 })
                 $("#whichIsBetterBtn").click(function() {
-                    if(lowerIsBetter){
+                    if (lowerIsBetter) {
                         lowerIsBetter = false
-                    }else{
+                    } else {
                         lowerIsBetter = true
                     }
                     renderChart()
@@ -582,10 +751,45 @@
                 })
                 $("#changeTitleButton").click(function() {
                     let title_t = $("#titleInput").val();
-                    if(title_t != ""){
+                    if (title_t != "") {
                         title = title_t
                         renderChart()
                     }
+                })
+                $("#changeSurgeryNameButton").click(function() {
+                    let surgeryName_t = $("#surgeryNameInput").val();
+                    if (surgeryName_t != "") {
+                        SurgeryName = surgeryName_t
+                        renderChart()
+                    }
+                })
+                $("#surgeryBtn").click(function() {
+                    if (isSurgery) {
+                        isSurgery = false
+                    } else {
+                        isSurgery = true
+                    }
+                    renderChart()
+                })
+                $("#addLineBtn").click(function() {
+                    numberOfLine = numberOfLine + 1
+                    lineData_list.push(yData[0])
+                    renderChart()
+                })
+                $("#deleteLineBtn").click(function() {
+                    if (numberOfLine > 1) {
+                        numberOfLine = numberOfLine - 1
+                        lineData_list.pop()
+                    }
+                    renderChart()
+                })
+                $("#duplicateBtn").click(function() {
+                    if (isDuplicate) {
+                        isDuplicate = false
+                    } else {
+                        isDuplicate = true
+                    }
+                    renderChart()
                 })
             });
         </script>
