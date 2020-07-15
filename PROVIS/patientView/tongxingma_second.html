@@ -4,12 +4,63 @@
 <head>
     <meta charset="UTF-8" />
     <title>通信行程卡</title>
+    <style type="text/css">
+        #mainPage {
+            background-image: url("https://basketduck.github.io/PROVIS/patientView/secondPage.png");
+            width: 720px;
+            height: 1050px;
+        }
+        
+        #timeString {
+            position: absolute;
+            left: 301px;
+            top: 368px;
+            font-size: 26px;
+            font-family: sans-serif;
+            color: #A0A0A0;
+        }
+        
+        #gengxinyu {
+            position: absolute;
+            left: 199px;
+            top: 364px;
+            font-size: 26px;
+            font-family: sans-serif;
+            color: #A0A0A0;
+        }
+    </style>
 </head>
 
 <body>
-    <div align="center">
-        <img src="https://basketduck.github.io/PROVIS/patientView/secondPage.png" style="margin: 0 auto;" height="1050" width="720" />
+    <div align="center" id="mainPage">
+        <div id='gengxinyu'>更新于:</div>
+        <div id='timeString'></div>
     </div>
 </body>
+<script type="text/javascript">
+    Date.prototype.format = function(fmt) {
+        var o = {
+            "M+": this.getMonth() + 1, //月份 
+            "d+": this.getDate(), //日 
+            "h+": this.getHours(), //小时 
+            "m+": this.getMinutes(), //分 
+            "s+": this.getSeconds(), //秒 
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+            "S": this.getMilliseconds() //毫秒 
+        };
+        if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(fmt)) {
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            }
+        }
+        return fmt;
+    }
+    var myDate = new Date()
+    var timeString = myDate.format("yyyy.MM.dd hh:mm:ss")
+    document.getElementById("timeString").innerText = timeString
+</script>
 
 </html>
