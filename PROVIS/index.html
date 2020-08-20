@@ -102,6 +102,7 @@
                             <button class="btn btn-primary" type="button" id="deleteLineBtn">Del Line</button> -->
                             <button class="btn btn-primary" type="button" id="whichIsBetterBtn">H/L Better</button>
                             <button class="btn btn-primary" type="button" id="duplicateBtn">Duplicate</button>
+                            <button class="btn btn-primary" type="button" id="flipAxisBtn">FilpAxis</button>
                         </div>
                     </div>
                 </form>
@@ -123,7 +124,7 @@
             </div>
             <div class="col-lg-4">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="time_interval_input" placeholder="Time Interval, default 6(months)" />
+                    <input type="text" class="form-control" id="time_interval_input" placeholder="Time Interval, default 2(months)" />
                     <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
                     <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
                 </div>
@@ -131,6 +132,7 @@
         </div>
         <script>
             var lowerIsBetter = false
+            var isTopDown = false
             paraOfYData = {
                 min: 22,
                 max: 64
@@ -138,6 +140,7 @@
 
             PainData = [
                 [50, null, 55, null, 60, null, null, 55, null, 50, null],
+                // [30, 30, 35, 50, 50, 55],
                 [30, null, 30, null, 35, null, 50, null, 50, null, 55],
                 [40, null, 40, null, 40, null, 40, null, 50, null, 50],
                 [60, null, 60, null, 65, null, null, 60, null, 50, null],
@@ -160,9 +163,9 @@
             var Patient_id = 1
             var title = 'Title'
 
-            var startDate = new Date(2015, 11, 25)
-            var time_interval_total = 3
-            var time_interval = 3
+            var startDate = new Date(2017, 12, 25)
+            var time_interval_total = 2
+            var time_interval = 2
             var time_interval_list = []
             var endDate
             var isSurgery = true
@@ -185,9 +188,9 @@
             function appendDataPoint(data) {
                 let time_interval_t = $("#time_interval_input").val();
                 if (time_interval_t == "") {
-                    time_interval = 6
+                    time_interval = 2
                     time_interval_list.push(time_interval)
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                     data.push({
                         y: 50,
                         x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
@@ -198,7 +201,7 @@
                     } else {
                         time_interval = time_interval_t
                         time_interval_list.push(time_interval)
-                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                         data.push({
                             y: 50,
                             x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
@@ -210,7 +213,7 @@
             function deleteDataPoint(data) {
                 if (data.length > 1) {
                     time_interval_list.pop()
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                     data.pop()
                 } else {
                     alert("Nothing Left!")
@@ -231,14 +234,14 @@
                             y: PainData[Patient_id][j],
                             x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
                         })
-                        time_interval = 3
+                        time_interval = 1
                     } else {
-                        time_interval = time_interval + 3
+                        time_interval = time_interval + 1
                     }
                 }
                 yData.push(yData_temp)
 
-                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                 return yData
             }
 
@@ -354,6 +357,10 @@
                 var yScale = d3.scaleLinear()
                     .range([svgHeight - svgMargin.bottom, svgMargin.top])
                     .domain([0, 100])
+                if(isTopDown){
+                    yScale.domain([100, 0])
+                }
+                    
                 svg.append('g')
                     .call(d3.axisLeft(yScale).ticks(4))
                     .attr('transform', `translate(${svgMargin.left},0)`)
@@ -372,26 +379,49 @@
                     .attr('class', "axisX")
                     // d3.selectAll('g.tick text').attr('transform','rotate(30)')
 
-                svg.append('rect')
-                    .attr('x', svgWidth - svgMargin.right)
-                    .attr('y', yScale(100))
-                    .attr('width', bar_width)
-                    .attr('height', yScale(higher_bound) - yScale(100))
-                    .attr("fill", RGY(Number(higher_bound) + Number((100 - higher_bound) / 2)))
+                if(isTopDown){
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(higher_bound))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(higher_bound) - yScale(100)))
+                        .attr("fill", RGY(Number(higher_bound) + Number((100 - higher_bound) / 2)))
 
-                svg.append('rect')
-                    .attr('x', svgWidth - svgMargin.right)
-                    .attr('y', yScale(higher_bound))
-                    .attr('width', bar_width)
-                    .attr('height', yScale(lower_bound) - yScale(higher_bound))
-                    .attr("fill", RGY(Number(lower_bound) + Number((higher_bound - lower_bound) / 2)))
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(lower_bound))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(lower_bound) - yScale(higher_bound)))
+                        .attr("fill", RGY(Number(lower_bound) + Number((higher_bound - lower_bound) / 2)))
 
-                svg.append('rect')
-                    .attr('x', svgWidth - svgMargin.right)
-                    .attr('y', yScale(lower_bound))
-                    .attr('width', bar_width)
-                    .attr('height', yScale(0) - yScale(lower_bound))
-                    .attr("fill", RGY(lower_bound / 2))
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(0))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(0) - yScale(lower_bound)))
+                        .attr("fill", RGY(lower_bound / 2))
+                }else{
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(100))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(higher_bound) - yScale(100)))
+                        .attr("fill", RGY(Number(higher_bound) + Number((100 - higher_bound) / 2)))
+
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(higher_bound))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(lower_bound) - yScale(higher_bound)))
+                        .attr("fill", RGY(Number(lower_bound) + Number((higher_bound - lower_bound) / 2)))
+
+                    svg.append('rect')
+                        .attr('x', svgWidth - svgMargin.right)
+                        .attr('y', yScale(lower_bound))
+                        .attr('width', bar_width)
+                        .attr('height', Math.abs(yScale(0) - yScale(lower_bound)))
+                        .attr("fill", RGY(lower_bound / 2))
+                }
 
                 svg.append("line")
                     .attr('x1', `${svgMargin.left}`)
@@ -704,7 +734,7 @@
                     if (!Number.isNaN(input_y)) {
                         startYear = input_y - 1
                         startDate = new Date(startYear, 11, 25)
-                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
 
                         for (let i = 0; i < yData[0].length; i++) {
                             yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0, i + 1).reduce(getSum, 0))
@@ -788,6 +818,14 @@
                         isDuplicate = false
                     } else {
                         isDuplicate = true
+                    }
+                    renderChart()
+                })
+                $("#flipAxisBtn").click(function() {
+                    if (isTopDown) {
+                        isTopDown = false
+                    } else {
+                        isTopDown = true
                     }
                     renderChart()
                 })

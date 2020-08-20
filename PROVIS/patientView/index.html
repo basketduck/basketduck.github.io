@@ -98,8 +98,9 @@
                             </div>
                         </div>
                         <div class="col-lg-4">
-                            <button class="btn btn-primary" type="button" id="surgeryBtn">Surgery Option</button>
+                            <!-- <button class="btn btn-primary" type="button" id="surgeryBtn">Surgery Option</button> -->
                             <button class="btn btn-primary" type="button" id="duplicateBtn">Duplicate</button>
+                            <button class="btn btn-primary" type="button" id="flipAxisBtn">FilpAxis</button>
                         </div>
                     </div>
                 </form>
@@ -114,6 +115,24 @@
             </div>
             <div class="col-lg-5">
                 <div class="input-group">
+                    <input type="text" class="form-control" id="surgeryNameInput" placeholder="Input SurgeryName" />
+                    <button class="btn btn-primary" type="button" id="changeSurgeryNameButton">Set SurgeryName</button>
+                    <button class="btn btn-primary" type="button" id="surgeryBtn">Surgery Option</button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="time_interval_input" placeholder="Time Interval, default 2(months)" />
+                    <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
+                    <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3">
+            </div>
+            <div class="col-lg-5">
+                <div class="input-group">
                     <input type="text" class="form-control" id="LowerName" placeholder="Name LowerBound" />
                     <span class="input-group-btn"><button class="btn btn-primary" type="button" id="NameLowerButton">NamLwr</button></span>
                     <input type="text" class="form-control" id="UpperName" placeholder="Name HigherBound" />
@@ -122,23 +141,13 @@
             </div>
             <div class="col-lg-4">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="time_interval_input" placeholder="Time Interval, default 6(months)" />
-                    <button class="btn btn-primary" type="button" id="appendDataBtn">Append</button>
-                    <button class="btn btn-primary" type="button" id="deleteDataBtn">Delete</button>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-3"></div>
-            <div class="col-lg-5">
-                <div class="input-group">
                     <button class="btn btn-primary" type="button" id="elimateLowerButton">Eliminate Lower</button>
                     <button class="btn btn-primary" type="button" id="elimateHigherButton">Eliminate Higher</button>
                 </div>
             </div>
-            <div class="col-lg-4"></div>
         </div>
         <script>
+            var isTopDown = false
             paraOfYData = {
                 min: 22,
                 max: 64
@@ -170,8 +179,8 @@
             var lower_name = 'Normal Low'
             var higher_name = 'Normal High'
 
-            var startDate = new Date(2015, 11, 25)
-            var time_interval = 6
+            var startDate = new Date(2017, 12, 25)
+            var time_interval = 2
             var time_interval_list = []
             var endDate
             var SurgeryName = 'Surgery'
@@ -195,9 +204,9 @@
             function appendDataPoint(data) {
                 let time_interval_t = $("#time_interval_input").val();
                 if (time_interval_t == "") {
-                    time_interval = 6
+                    time_interval = 2
                     time_interval_list.push(time_interval)
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                     data.push({
                         y: 50,
                         x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
@@ -208,7 +217,7 @@
                     } else {
                         time_interval = time_interval_t
                         time_interval_list.push(time_interval)
-                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                         data.push({
                             y: 50,
                             x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
@@ -220,7 +229,7 @@
             function deleteDataPoint(data) {
                 if (data.length > 1) {
                     time_interval_list.pop()
-                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                    endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                     data.pop()
                 } else {
                     alert("Nothing Left!")
@@ -241,15 +250,15 @@
                             y: PainData[Patient_id][j],
                             x: d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0))
                         })
-                        time_interval = 3
+                        time_interval = 1
                     } else {
-                        time_interval = time_interval + 3
+                        time_interval = time_interval + 1
                     }
                 }
                 yData.push(yData_temp)
                 yData.push(yData_temp)
 
-                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
                 return yData
             }
 
@@ -414,7 +423,11 @@
 
                 var yScale = d3.scaleLinear()
                     .range([svgHeight + svgMargin.top, svgMargin.top])
-                    .domain([0, 100])
+                if(isTopDown){
+                    yScale.domain([100, 0])
+                }else{
+                    yScale.domain([0, 100])
+                }
                 svg.append('g')
                     .call(d3.axisLeft(yScale))
                     .attr('transform', `translate(${svgMargin.left},0)`)
@@ -570,7 +583,7 @@
                             .on("drag.update", update_surg));
                     var surg_line = surg_g.append("line")
                         .attr('y1', `${svgMargin.top}`)
-                        .attr('y2', `${svgHeight + svgMargin.top + 40}`)
+                        .attr('y2', `${svgHeight + svgMargin.top + 20}`)
                         .attr("stroke", "#d3d3d3")
                         .attr("stroke-opacity", '1')
                         .attr("stroke-width", "3px")
@@ -623,7 +636,7 @@
                     if (!Number.isNaN(input_y)) {
                         startYear = input_y - 1
                         startDate = new Date(startYear, 11, 25)
-                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 3)
+                        endDate = d3.timeMonth.offset(startDate, time_interval_list.reduce(getSum, 0) + 2)
 
                         for (let i = 0; i < yData[0].length; i++) {
                             yData[0][i].x = d3.timeMonth.offset(startDate, time_interval_list.slice(0, i + 1).reduce(getSum, 0))
@@ -689,6 +702,13 @@
                         renderChart()
                     }
                 })
+                $("#changeSurgeryNameButton").click(function() {
+                    let surgeryName_t = $("#surgeryNameInput").val();
+                    if (surgeryName_t != "") {
+                        SurgeryName = surgeryName_t
+                        renderChart()
+                    }
+                })
                 $("#surgeryBtn").click(function() {
                     if (isSurgery) {
                         isSurgery = false
@@ -718,6 +738,14 @@
                         withHigherBound = false
                     } else {
                         withHigherBound = true
+                    }
+                    renderChart()
+                })
+                $("#flipAxisBtn").click(function() {
+                    if (isTopDown) {
+                        isTopDown = false
+                    } else {
+                        isTopDown = true
                     }
                     renderChart()
                 })
